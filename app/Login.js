@@ -8,7 +8,6 @@ GoogleSignin.configure({
 export const signInWithGoogle = async () => {
   try {
     const userInfo = await GoogleSignin[Platform.OS === 'android' ? 'signIn' : 'signInSilently']();
-    console.log('User Info:', userInfo);
     await GoogleSignin.revokeAccess();
     return userInfo; 
   } catch (error) {

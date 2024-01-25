@@ -41,6 +41,9 @@ export const styles = StyleSheet.create({
       position: 'absolute',
       top: 10,
       right: 10,
+      marginHorizontal: 10,
+      height: 40,
+      justifyContent: 'center',
       backgroundColor: 'lightgray', // Temporary background for debugging
       padding: 10, 
       zIndex: 1, 
@@ -70,7 +73,29 @@ export const styles = StyleSheet.create({
       color: 'white',
       fontSize: 8, // Reduced font size
     },
-    
+    dropdownOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    },
+    dropdownMenu: {
+      backgroundColor: 'white',
+      padding: 20,
+      borderRadius: 10,
+      elevation: 5, // Shadow for Android
+      shadowColor: '#000', // Shadow for iOS
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+    },
+    dropdownItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
   });
 
   

@@ -1,61 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { VictoryChart, VictoryTheme, VictoryAxis, VictoryLine, VictoryArea, VictoryContainer, VictoryZoomContainer} from 'victory-native';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback} from 'react-native';
+import { VictoryChart, VictoryTheme, VictoryAxis, VictoryLine, VictoryArea, VictoryContainer, VictoryZoomContainer } from 'victory-native';
 import axios from 'axios';
 import * as d3 from 'd3';
 import { styles } from '../style/style_graph_view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import  CustomZoomBackgroundContainer from './CustomZoomBackgroundContainer';
+import CustomZoomBackgroundContainer from './CustomZoomBackgroundContainer';
 
 
 const chartPadding = { top: 10, bottom: 50, left: 50, right: 50 };
-
-const CustomCheckbox = ({ checkboxKey, isChecked, onToggle }) => {
-  const handlePress = () => {
-    // console.log(`Pressed Checkbox: ${checkboxKey}`);  // Debugging line
-    onToggle(checkboxKey);
-  };
-
-  return (
-    <TouchableOpacity onPress={handlePress} style={styles.checkboxContainer}>
-      <View style={[
-        styles.checkboxBase,
-        isChecked && styles.checkboxChecked
-      ]}>
-        <Text style={styles.checkboxCheckmark}>{isChecked ? '✓' : ' '}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-const CustomLegend = ({ dataKeys, visiblePlots, togglePlot }) => {
-  return (
-    <View style={styles.legendContainer}>
-      <View>
-        {dataKeys.map((key) => {
-          // console.log(`Rendering checkbox for ${key}, checked: ${visiblePlots[key]}`); 
-          return (
-            <View key={key} style={styles.legendItem}>
-              <CustomCheckbox
-                isChecked={visiblePlots[key]}
-                onToggle={() => togglePlot(key)}
-              />
-              <Text style={{ fontSize: 8 }}>{key}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-};
 
 
 const GraphView = ({ siteId }) => {
   const [data, setData] = useState({});
   const [visiblePlots, setVisiblePlots] = useState({});
   const [showLegend, setShowLegend] = useState(false);
-  const [startDate, setStartDate] = useState(null); 
-  const [endDate, setEndDate] = useState(null); 
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const screenWidth = 400;
   const screenHeight = 300;
@@ -67,7 +28,32 @@ const GraphView = ({ siteId }) => {
   const formatDate_2 = d3.timeFormat("%Y-%m-%d %H:%M:%S");
   const earlierTodayFormatted = formatDate_2(earlierToday);
   const laterTodayFormatted = formatDate_2(laterToday);
-  
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  const toggleDropdown = () => {
+    setDropdownVisible(!dropdownVisible);
+  };
+
+  const handlePlotToggle = (key, group = false) => {
+    if (group) {
+      // Toggle visibility for the group of Probality Space plots
+      const isVisible = !(visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']);
+      setVisiblePlots(prevState => ({
+        ...prevState,
+        'Probality_Space_high': isVisible,
+        'Probality_Space_low': isVisible,
+        'Probality_Space': isVisible,
+      }));
+    } else {
+      // Toggle visibility for individual plots
+      setVisiblePlots(prevState => ({
+        ...prevState,
+        [key]: !prevState[key],
+      }));
+    }
+  };
+
+
   const handleZoom = (domain) => {
     if (domain.x) {
       // Check if domain.x is within the data range
@@ -77,13 +63,13 @@ const GraphView = ({ siteId }) => {
       }
     }
   };
-  
+
 
   const fetchData = async () => {
     if (siteId) {
       try {
         const response = await axios.get(`https://enterococcus.today/waf/TX/others/eCount_stat_app/${siteId}.csv`);
-        
+
         // Parse the CSV data
         const parseDate = d3.timeParse("%Y-%m-%d");
         const parsedData = d3.csvParse(response.data, (row) => {
@@ -153,10 +139,24 @@ const GraphView = ({ siteId }) => {
 
   const formatDate = d3.timeFormat("%d %b");
 
+
+
+  const handleProbalitySpaceToggle = () => {
+    const isVisible = !(visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']);
+    setVisiblePlots(prevState => ({
+      ...prevState,
+      'Probality_Space_high': isVisible,
+      'Probality_Space_low': isVisible,
+      'Probality_Space': isVisible,
+    }));
+    setDropdownVisible(false);
+  };
+
+  // Generate areaPlotData conditionally based on the visibility of the grouped plots
   let areaPlotData = [];
-  if (data["Probality_Space_high"] && data["Probality_Space_low"]) {
-    areaPlotData = data["Probality_Space_high"].map((high, index) => {
-      const low = data["Probality_Space_low"][index];
+  if (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && data['Probality_Space_high'] && data['Probality_Space_low']) {
+    areaPlotData = data['Probality_Space_high'].map((high, index) => {
+      const low = data['Probality_Space_low'][index];
       return { date: high.date, y: high.value, y0: low.value };
     });
   }
@@ -167,22 +167,55 @@ const GraphView = ({ siteId }) => {
     tickValues = d3.timeWeek.every(1).range(d3.min(dates), d3.max(dates));
   }
 
-  const togglePlot = (key) => {
-    setVisiblePlots(prevState => ({
-      ...prevState,
-      [key]: !prevState[key],
-    }));
-  };
-  
+
+
   return (
     <ScrollView horizontal style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <TouchableOpacity
-        style={styles.legendToggleButton}
-        onPress={() => setShowLegend(!showLegend)}
+       <View style={styles.legendToggleButton}>
+        <TouchableOpacity onPress={toggleDropdown} style={styles.dropdownButton}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold' }}>⋮</Text>
+        </TouchableOpacity>
+
+        {dropdownVisible && (
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={dropdownVisible}
+        onRequestClose={() => setDropdownVisible(false)}
       >
-        <Text style = {{fontSize: 14,fontWeight: 'bold'}}>⋮</Text>
-      </TouchableOpacity>
-  
+        <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
+          <View style={dropdownStyles.dropdownOverlay}>
+            <View style={dropdownStyles.dropdownMenu}>
+            <TouchableOpacity
+                  style={[
+                    dropdownStyles.dropdownItem,
+                    (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']) ? dropdownStyles.dropdownItemSelected : null,
+                  ]}
+                  onPress={() => handlePlotToggle(null, true)}
+                >
+                  <Text style={dropdownStyles.dropdownItemText}>Probality Space</Text>
+                </TouchableOpacity>
+                {Object.keys(data).filter(key => !['Probality_Space_high', 'Probality_Space_low', 'Probality_Space'].includes(key)).map(key => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      dropdownStyles.dropdownItem,
+                      visiblePlots[key] ? dropdownStyles.dropdownItemSelected : null,
+                    ]}
+                    onPress={() => handlePlotToggle(key)}
+                  >
+                    <Text style={dropdownStyles.dropdownItemText}>{key}</Text>
+                  </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    )}
+
+      </View>
+
+
       {Object.keys(data).length > 0 && (
         <VictoryChart
           theme={VictoryTheme.material}
@@ -191,14 +224,14 @@ const GraphView = ({ siteId }) => {
           width={screenWidth}
           height={screenHeight}
           containerComponent={
-            <CustomZoomBackgroundContainer 
+            <CustomZoomBackgroundContainer
               zoomDimension="x"
               onZoom={handleZoom}
             />
           }
-          domain={{ x: [startDate, endDate] }}  
+          domain={{ x: [startDate, endDate] }}
         >
-          
+
           <VictoryAxis
             scale="time"
             tickValues={tickValues}
@@ -221,7 +254,7 @@ const GraphView = ({ siteId }) => {
           />
           <VictoryLine
             x={() => new Date(earlierTodayFormatted)}
-            style={{ data: { stroke: 'black', strokeWidth: 1} }}
+            style={{ data: { stroke: 'black', strokeWidth: 1 } }}
           />
 
           {/* Vertical line for later today */}
@@ -229,12 +262,6 @@ const GraphView = ({ siteId }) => {
             x={() => new Date(laterTodayFormatted)}
             style={{ data: { stroke: 'black', strokeWidth: 1 } }}
           />
-
-
-            
-      {showLegend && (
-        <CustomLegend dataKeys={Object.keys(data)} visiblePlots={visiblePlots} togglePlot={togglePlot} />
-      )}
           {Object.keys(data).map((key, index) => visiblePlots[key] && (
             <VictoryLine
               key={key}
@@ -253,6 +280,44 @@ const GraphView = ({ siteId }) => {
       )}
     </ScrollView>
   );
-};  
+};
+
+const dropdownStyles = StyleSheet.create({
+  dropdownButton: {
+    padding: 10, 
+  },
+  dropdownOverlay: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    right: 30, // Position near to three dots
+    top: 220,   // Adjust this as needed
+    width: 130, // Width of the dropdown
+    backgroundColor: 'white',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  dropdownItem: {
+    padding: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd', // Add a separator line between items
+  },
+  dropdownItemSelected: {
+    backgroundColor: 'lightgray', // Highlight selected items
+  },
+  dropdownItemText: {
+    color: 'black', 
+    fontSize: 10,// Default text color
+  },
+});
 
 export default GraphView;

@@ -16,11 +16,9 @@ function LoginPage(){
   };
 
   const handleSignIn = async () => {
-    console.log('Sign-in button pressed');
     try {
       // Call signInWithGoogle and wait for it to complete
       await signInWithGoogle();
-      console.log('Sign-in successful');
       navigation.navigate('DrawerNavigator'); // Navigate after successful sign-in
     } catch (error) {
       console.error('Sign-in failed:', error);

@@ -312,7 +312,9 @@ useEffect(() => {
     // Function to select the first site as default
     const processSiteOptions = (siteArray) => {
       if (Array.isArray(siteArray) && siteArray.length > 0) {
-        setSelectedSite(siteArray[0].match(/\(([^)]+)\)/)?.[1]);
+        // Extract the site ID from the first item in the array and set it as the selected site
+        const firstSiteId = siteArray[0].match(/\(([^)]+)\)/)?.[1];
+        setSelectedSite(firstSiteId);
         return siteArray;
       } else {
         console.error('Fetched data is not an array or is empty:', siteArray);
@@ -354,7 +356,7 @@ useEffect(() => {
 
           />
           <TouchableOpacity
-            style={styles.closeButton}
+            style={styles.closeButton}processSiteOptions 
             onPress={() => setIsModalVisible(false)}
           >
             <Text style={{ color: 'white' }}>OK</Text>
