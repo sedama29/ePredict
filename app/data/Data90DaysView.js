@@ -12,28 +12,60 @@ const Data90DaysView = ({ siteId }) => {
         Linking.openURL('https://enterococcus.today/home.php');
     };
 
+    const storeData = async (data) => {
+        try {
+            const jsonData = JSON.stringify(data);
+            await AsyncStorage.setItem(`data-${siteId}`, jsonData);
+        } catch (error) {
+            console.error('Error storing data:', error);
+        }
+    };
+
     const fetchData = async () => {
         try {
             const response = await axios.get(`https://enterococcus.today/waf/TX/others/data_90_days/${siteId}.csv`);
     
             Papa.parse(response.data, {
                 header: true,
-                complete: (results) => {
-                    setData(results.data);
+                complete: async (results) => {
+                    if (results.data.length > 0) {
+                        setData(results.data);
+                        storeData(results.data);
+                        // Update last fetch date after successful data fetch
+                        const today = new Date().toISOString().split('T')[0];
+                        await AsyncStorage.setItem(`lastFetchDate-${siteId}`, today);
+                    } else {
+                        // If fetched data is empty, use stored data
+                        const storedData = await AsyncStorage.getItem(`data-${siteId}`);
+                        if (storedData) {
+                            setData(JSON.parse(storedData));
+                        }
+                    }
                 }
             });
         } catch (error) {
             console.error('Error fetching CSV data:', error);
+            // If there's an error in fetching, use stored data
+            const storedData = await AsyncStorage.getItem(`data-${siteId}`);
+            if (storedData) {
+                setData(JSON.parse(storedData));
+            }
         }
     };
+
     const checkAndFetchData = async () => {
-        const lastFetchKey = `lastFetchDate-${siteId}`; // Unique key for each siteId
+        const lastFetchKey = `lastFetchDate-${siteId}`;
         const lastFetchDate = await AsyncStorage.getItem(lastFetchKey);
         const today = new Date().toISOString().split('T')[0];
     
-        if (lastFetchDate !== today) {
+        if (!lastFetchDate || lastFetchDate !== today) {
             await fetchData();
-            await AsyncStorage.setItem(lastFetchKey, today);
+        } else {
+            // Use stored data if it's not time to fetch new data
+            const storedData = await AsyncStorage.getItem(`data-${siteId}`);
+            if (storedData) {
+                setData(JSON.parse(storedData));
+            }
         }
     };
     
@@ -42,6 +74,7 @@ const Data90DaysView = ({ siteId }) => {
             checkAndFetchData();
         }
     }, [siteId]);
+
 
     const getColorForLevel = (level) => {
         switch (level) {

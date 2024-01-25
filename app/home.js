@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Image, Dimensions, Modal, TouchableOpacity, FlatList } from 'react-native';
+import axios from 'axios';
 import { styles } from './style/style_home';
 import Data90DaysView from './data/Data90DaysView';
 import ContactDetailsView from './data/ContactDetailsView';
 import GraphView from './Graph/GraphView';
-import { FontAwesome } from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TabView, SceneMap} from 'react-native-tab-view';
 import MapImage1 from '../assets/images/map_images/JEF.jpg';
 import MapImage2 from '../assets/images/map_images/GAL.jpg';
@@ -171,26 +172,55 @@ const Home = () => {
     return result;
   };
 
-  useEffect(() => {
-    const fetchCSVData = async (url) => {
-      try {
-        const response = await fetch(url);
-        const text = await response.text();
-        return csvToJson(text);
-      } catch (error) {
+  const fetchCSVData = async (url) => {
+    try {
+        const response = await axios.get(url);
+        return csvToJson(response.data);
+    } catch (error) {
         console.error('Error fetching CSV data:', error);
-      }
-    };
-    const fetchData = async () => {
-      const observed = await fetchCSVData('https://enterococcus.today/waf/TX/others/observed.csv');
-      const predicted = await fetchCSVData('https://enterococcus.today/waf/TX/others/predicted.csv');
+        throw error;
+    }
+};
 
-      setObservedData(observed);
-      setPredictedData(predicted);
-      setTotalCount(observed.length + predicted.length); // Or calculate based on your data structure
+const fetchData = async () => {
+    try {
+        const observed = await fetchCSVData('https://enterococcus.today/waf/TX/others/observed.csv');
+        const predicted = await fetchCSVData('https://enterococcus.today/waf/TX/others/predicted.csv');
+
+        setObservedData(observed);
+        setPredictedData(predicted);
+        setTotalCount(observed.length + predicted.length); 
+
+
+        AsyncStorage.setItem('observedData', JSON.stringify(observed));
+        AsyncStorage.setItem('predictedData', JSON.stringify(predicted));
+        const today = new Date().toISOString().split('T')[0];
+        AsyncStorage.setItem('lastFetchDate', today);
+    } catch (error) {
+        const storedObserved = await AsyncStorage.getItem('observedData');
+        const storedPredicted = await AsyncStorage.getItem('predictedData');
+        if (storedObserved) setObservedData(JSON.parse(storedObserved));
+        if (storedPredicted) setPredictedData(JSON.parse(storedPredicted));
+    }
+};
+
+useEffect(() => {
+    const checkAndFetchData = async () => {
+        const lastFetchDate = await AsyncStorage.getItem('lastFetchDate');
+        const today = new Date().toISOString().split('T')[0];
+
+        if (lastFetchDate !== today) {
+            await fetchData();
+        } else {
+            const storedObserved = await AsyncStorage.getItem('observedData');
+            const storedPredicted = await AsyncStorage.getItem('predictedData');
+            if (storedObserved) setObservedData(JSON.parse(storedObserved));
+            if (storedPredicted) setPredictedData(JSON.parse(storedPredicted));
+        }
     };
-    fetchData();
-  }, []);
+
+    checkAndFetchData();
+}, []);
 
   const ObservedTab = () => (
     <ScrollView>
@@ -241,46 +271,61 @@ const Home = () => {
 
 
   useEffect(() => {
-    async function fetchSiteOptions() {
+    const fetchData = async (url, storageKey, setDataFunction, postProcess = null) => {
       try {
-        const response = await fetch('https://enterococcus.today/waf/TX/others/stations.txt');
+        const response = await fetch(url);
         const text = await response.text();
-        const siteArray = JSON.parse(text);
-        if (Array.isArray(siteArray) && siteArray.length > 0) {
-          setSiteOptions(siteArray);
-          setSelectedSite(siteArray[0].match(/\(([^)]+)\)/)?.[1]); // Set the first site as default
-        } else {
-          console.error('Fetched data is not an array or is empty:', siteArray);
+        let data = JSON.parse(text);
+  
+        // Post-process data if needed (e.g., setting default site)
+        if (postProcess) {
+          data = postProcess(data);
         }
+  
+        setDataFunction(data);
+        AsyncStorage.setItem(storageKey, JSON.stringify(data));
+        const today = new Date().toISOString().split('T')[0];
+        AsyncStorage.setItem(`lastFetchDate-${storageKey}`, today);
       } catch (error) {
-        console.error('Error fetching site data:', error);
-      }
-    }
-
-    async function fetchCoords() {
-      try {
-        const response = await fetch('https://enterococcus.today/waf/TX/others/beach_lat_lon.txt');
-        const text = await response.text();
-        setCoordsDict(JSON.parse(text));
-      } catch (error) {
-        console.error('Error fetching coordinates:', error);
-      }
-    }
-
-    const fetchContactDetails = async () => {
-      try {
-        const response = await fetch('https://enterococcus.today/waf/TX/others/contact_details.json');
-        const data = await response.json();
-        setContactDetails(data);
-      } catch (error) {
-        console.error('Error fetching contact details:', error);
+        console.error(`Error fetching data from ${url}:`, error);
+        const storedData = await AsyncStorage.getItem(storageKey);
+        if (storedData) {
+          setDataFunction(JSON.parse(storedData));
+        }
       }
     };
-    fetchContactDetails();
-    fetchSiteOptions();
-    fetchCoords();
+  
+    const checkAndFetchData = async (url, storageKey, setDataFunction, postProcess) => {
+      const lastFetchDate = await AsyncStorage.getItem(`lastFetchDate-${storageKey}`);
+      const today = new Date().toISOString().split('T')[0];
+  
+      if (lastFetchDate !== today) {
+        await fetchData(url, storageKey, setDataFunction, postProcess);
+      } else {
+        const storedData = await AsyncStorage.getItem(storageKey);
+        if (storedData) {
+          setDataFunction(JSON.parse(storedData));
+        }
+      }
+    };
+  
+    // Function to select the first site as default
+    const processSiteOptions = (siteArray) => {
+      if (Array.isArray(siteArray) && siteArray.length > 0) {
+        setSelectedSite(siteArray[0].match(/\(([^)]+)\)/)?.[1]);
+        return siteArray;
+      } else {
+        console.error('Fetched data is not an array or is empty:', siteArray);
+        return [];
+      }
+    };
+  
+    checkAndFetchData('https://enterococcus.today/waf/TX/others/stations.txt', 'siteOptions', setSiteOptions, processSiteOptions);
+    checkAndFetchData('https://enterococcus.today/waf/TX/others/beach_lat_lon.txt', 'coordsDict', setCoordsDict);
+    checkAndFetchData('https://enterococcus.today/waf/TX/others/contact_details.json', 'contactDetails', setContactDetails);
+  
   }, []);
-
+  
   useEffect(() => {
     if (selectedSite) {
       const imageSrc = `https://enterococcus.today/waf/TX/others/beach_images/${selectedSite}.jpg`;

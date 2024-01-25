@@ -4,7 +4,7 @@ import { VictoryChart, VictoryTheme, VictoryAxis, VictoryLine, VictoryArea, Vict
 import axios from 'axios';
 import * as d3 from 'd3';
 import { styles } from '../style/style_graph_view';
-// import CustomBackground from './CustomBackground';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import  CustomZoomBackgroundContainer from './CustomZoomBackgroundContainer';
 
 
@@ -79,19 +79,14 @@ const GraphView = ({ siteId }) => {
   };
   
 
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (siteId) {
-        try {
-          
-          const response = await axios.get(`https://enterococcus.today/waf/TX/others/eCount_stat_app/${siteId}.csv`);
-          
-          // Parse the CSV data
-          const parseDate = d3.timeParse("%Y-%m-%d");
-          // After parsing the CSV data
-          const parsedData = d3.csvParse(response.data, (row) => {
+  const fetchData = async () => {
+    if (siteId) {
+      try {
+        const response = await axios.get(`https://enterococcus.today/waf/TX/others/eCount_stat_app/${siteId}.csv`);
+        
+        // Parse the CSV data
+        const parseDate = d3.timeParse("%Y-%m-%d");
+        const parsedData = d3.csvParse(response.data, (row) => {
           const newRow = { date: parseDate(row.date) };
           Object.keys(row).forEach(key => {
             if (key !== 'date' && row[key] !== '') {
@@ -106,50 +101,56 @@ const GraphView = ({ siteId }) => {
 
         const filteredData = parsedData.filter(d => d.date && Object.keys(d).every(k => !isNaN(d[k])));
 
-        // console.log("Filtered Data:", filteredData);
+        const minDate = d3.min(filteredData, d => d.date);
+        const maxDate = d3.max(filteredData, d => d.date);
+        setStartDate(minDate);
+        setEndDate(maxDate);
 
-
-          const minDate = d3.min(filteredData, (d) => d.date);
-          const maxDate = d3.max(filteredData, (d) => d.date);
-          setStartDate(minDate);
-          setEndDate(maxDate);
-
-  
-          // Transform the data into the desired format
-          const transformedData = filteredData.reduce((acc, row) => {
-            Object.keys(row).forEach(key => {
-              if (key !== 'date') {
-                if (!acc[key]) acc[key] = [];
-                acc[key].push({ date: row.date, value: row[key] });
-              }
-            });
-            return acc;
-          }, {});
-          // console.log("Transformed Data:", transformedData);
-          
-
-  
-          // Set the fetched and transformed data to state
-          setData(transformedData);
-  
-          // Initialize visibility state
-          const initialVisibility = {};
-          let count = 0; // Counter to track the number of keys processed
-          Object.keys(transformedData).forEach(key => {
-            initialVisibility[key] = count < 4; // Only first three keys are true
-            count++;
+        const transformedData = filteredData.reduce((acc, row) => {
+          Object.keys(row).forEach(key => {
+            if (key !== 'date') {
+              if (!acc[key]) acc[key] = [];
+              acc[key].push({ date: row.date, value: row[key] });
+            }
           });
-          setVisiblePlots(initialVisibility);
-  
-        } catch (error) {
-          console.error('Error fetching graph data:', error);
-        }
+          return acc;
+        }, {});
+
+        setData(transformedData);
+
+        const initialVisibility = {};
+        Object.keys(transformedData).forEach((key, index) => {
+          initialVisibility[key] = index < 4; // Adjust as needed
+        });
+        setVisiblePlots(initialVisibility);
+
+        // Update the last fetched date in AsyncStorage
+        const today = new Date().toISOString().split('T')[0];
+        await AsyncStorage.setItem(`lastFetchDate-${siteId}`, today);
+
+      } catch (error) {
+        console.error('Error fetching graph data:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const checkDataAndUpdate = async () => {
+      const lastFetchKey = `lastFetchDate-${siteId}`;
+      const lastFetchDate = await AsyncStorage.getItem(lastFetchKey);
+      const today = new Date().toISOString().split('T')[0];
+
+      if (lastFetchDate !== today) {
+        await fetchData();
+        await AsyncStorage.setItem(lastFetchKey, today);
       }
     };
-  
-    fetchData();
+
+    if (siteId) {
+      checkDataAndUpdate();
+    }
   }, [siteId]);
-  
+
   const formatDate = d3.timeFormat("%d %b");
 
   let areaPlotData = [];
