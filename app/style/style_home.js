@@ -221,4 +221,23 @@ export const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     // fontFamily: 'Helvetica',
   },
+  dotsButtonBackground: {
+    width: 10,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+
+  
+  dotsButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  dotsButtonText: {
+    fontSize: 20, 
+    color: 'black', 
+    fontWeight: 'bold', 
+  }
 });

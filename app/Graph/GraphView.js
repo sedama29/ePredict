@@ -125,11 +125,9 @@ const GraphView = ({ siteId }) => {
       const lastFetchKey = `lastFetchDate-${siteId}`;
       const lastFetchDate = await AsyncStorage.getItem(lastFetchKey);
       const today = new Date().toISOString().split('T')[0];
-
-      if (lastFetchDate !== today) {
         await fetchData();
         await AsyncStorage.setItem(lastFetchKey, today);
-      }
+      
     };
 
     if (siteId) {
@@ -141,16 +139,6 @@ const GraphView = ({ siteId }) => {
 
 
 
-  const handleProbalitySpaceToggle = () => {
-    const isVisible = !(visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']);
-    setVisiblePlots(prevState => ({
-      ...prevState,
-      'Probality_Space_high': isVisible,
-      'Probality_Space_low': isVisible,
-      'Probality_Space': isVisible,
-    }));
-    setDropdownVisible(false);
-  };
 
   // Generate areaPlotData conditionally based on the visibility of the grouped plots
   let areaPlotData = [];
@@ -172,7 +160,7 @@ const GraphView = ({ siteId }) => {
   return (
     <ScrollView horizontal style={styles.container} contentContainerStyle={styles.contentContainer}>
        <View style={styles.legendToggleButton}>
-        <TouchableOpacity onPress={toggleDropdown} style={styles.dropdownButton}>
+        <TouchableOpacity onPress={toggleDropdown}>
           <Text style={{ fontSize: 16, fontWeight: 'bold' }}>⋮</Text>
         </TouchableOpacity>
 
@@ -184,27 +172,27 @@ const GraphView = ({ siteId }) => {
         onRequestClose={() => setDropdownVisible(false)}
       >
         <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
-          <View style={dropdownStyles.dropdownOverlay}>
-            <View style={dropdownStyles.dropdownMenu}>
+          <View style={styles.dropdownOverlay}>
+            <View style={styles.dropdownMenu}>
             <TouchableOpacity
                   style={[
-                    dropdownStyles.dropdownItem,
+                    styles.dropdownItem,
                     (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']) ? dropdownStyles.dropdownItemSelected : null,
                   ]}
                   onPress={() => handlePlotToggle(null, true)}
                 >
-                  <Text style={dropdownStyles.dropdownItemText}>Probality Space</Text>
+                  <Text style={styles.dropdownItemText}>Probality Space</Text>
                 </TouchableOpacity>
                 {Object.keys(data).filter(key => !['Probality_Space_high', 'Probality_Space_low', 'Probality_Space'].includes(key)).map(key => (
                   <TouchableOpacity
                     key={key}
                     style={[
-                      dropdownStyles.dropdownItem,
-                      visiblePlots[key] ? dropdownStyles.dropdownItemSelected : null,
+                      styles.dropdownItem,
+                      visiblePlots[key] ? styles.dropdownItemSelected : null,
                     ]}
                     onPress={() => handlePlotToggle(key)}
                   >
-                    <Text style={dropdownStyles.dropdownItemText}>{key}</Text>
+                    <Text style={styles.dropdownItemText}>{key}</Text>
                   </TouchableOpacity>
               ))}
             </View>
@@ -282,42 +270,5 @@ const GraphView = ({ siteId }) => {
   );
 };
 
-const dropdownStyles = StyleSheet.create({
-  dropdownButton: {
-    padding: 10, 
-  },
-  dropdownOverlay: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    right: 30, // Position near to three dots
-    top: 220,   // Adjust this as needed
-    width: 130, // Width of the dropdown
-    backgroundColor: 'white',
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  dropdownItem: {
-    padding: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd', // Add a separator line between items
-  },
-  dropdownItemSelected: {
-    backgroundColor: 'lightgray', // Highlight selected items
-  },
-  dropdownItemText: {
-    color: 'black', 
-    fontSize: 10,// Default text color
-  },
-});
 
 export default GraphView;

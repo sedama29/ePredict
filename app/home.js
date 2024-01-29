@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, Image, Dimensions, Modal, TouchableOpacity, FlatList } from 'react-native';
+import { ScrollView, View, Text, Image, Dimensions, Modal, TouchableOpacity, FlatList, ImageBackground } from 'react-native';
 import axios from 'axios';
 import { styles } from './style/style_home';
 import Data90DaysView from './data/Data90DaysView';
 import ContactDetailsView from './data/ContactDetailsView';
 import GraphView from './Graph/GraphView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TabView, SceneMap} from 'react-native-tab-view';
+import { TabView, SceneMap } from 'react-native-tab-view';
 import MapImage1 from '../assets/images/map_images/JEF.jpg';
 import MapImage2 from '../assets/images/map_images/GAL.jpg';
 import MapImage3 from '../assets/images/map_images/BRA.jpg';
@@ -40,7 +40,7 @@ const Home = () => {
       }}>
       <Text style={styles.pickerText}>{item}</Text>
     </TouchableOpacity>
-  );
+  )
   const [selectedImage, setSelectedImage] = useState(null);
 
   const touchAreas = [
@@ -77,28 +77,28 @@ const Home = () => {
     MapImage2: [
       { x: [235, 255], y: [75, 95], site: 'GAL038' },
       { x: [168, 188], y: [133, 153], site: 'GAL037' },
-      { x: [95, 115], y: [220, 240], site: 'GAL036' },    
+      { x: [95, 115], y: [220, 240], site: 'GAL036' },
     ],
     MapImage3: [
       { x: [230, 250], y: [65, 85], site: 'BRA012' },
       { x: [215, 235], y: [85, 105], site: 'BRA011' },
-      { x: [108, 128], y: [255, 275], site: 'BRA010' },    
+      { x: [108, 128], y: [255, 275], site: 'BRA010' },
     ],
     MapImage4: [
       { x: [187, 207], y: [110, 130], site: 'NUE014' },
       { x: [165, 185], y: [180, 200], site: 'NUE015' },
-      { x: [150, 170], y: [242, 262], site: 'NUE016' },    
+      { x: [150, 170], y: [242, 262], site: 'NUE016' },
     ],
     MapImage5: [
       { x: [170, 190], y: [95, 115], site: 'CAM011' },
       { x: [178, 198], y: [150, 170], site: 'CAM030' },
-      { x: [185, 205], y: [200, 220], site: 'CAM010' },    
+      { x: [185, 205], y: [200, 220], site: 'CAM010' },
     ],
   };
 
   const handleCamPress = (evt) => {
     const { locationX, locationY } = evt.nativeEvent;
-  
+
     // Determine the current image based on the selectedImage state
     let currentImageKey = null;
     if (selectedImage === MapImage1) {
@@ -115,10 +115,10 @@ const Home = () => {
     else if (selectedImage === MapImage5) {
       currentImageKey = 'MapImage5';
     }
-  
+
     if (currentImageKey && specificTouchAreas[currentImageKey]) {
       const touchAreas = specificTouchAreas[currentImageKey];
-  
+
       for (const touchArea of touchAreas) {
         if (
           locationX >= touchArea.x[0] && locationX <= touchArea.x[1] &&
@@ -174,53 +174,63 @@ const Home = () => {
 
   const fetchCSVData = async (url) => {
     try {
-        const response = await axios.get(url);
-        return csvToJson(response.data);
+      const response = await axios.get(url);
+      return csvToJson(response.data);
     } catch (error) {
-        console.error('Error fetching CSV data:', error);
-        throw error;
+      console.error('Error fetching CSV data:', error);
+      throw error;
     }
-};
+  };
 
-const fetchData = async () => {
+  const fetchData = async () => {
     try {
-        const observed = await fetchCSVData('https://enterococcus.today/waf/TX/others/observed.csv');
-        const predicted = await fetchCSVData('https://enterococcus.today/waf/TX/others/predicted.csv');
+      const observed = await fetchCSVData('https://enterococcus.today/waf/TX/others/observed.csv');
+      const predicted = await fetchCSVData('https://enterococcus.today/waf/TX/others/predicted.csv');
 
-        setObservedData(observed);
-        setPredictedData(predicted);
-        setTotalCount(observed.length + predicted.length); 
+      setObservedData(observed);
+      setPredictedData(predicted);
+      setTotalCount(observed.length + predicted.length);
 
 
-        AsyncStorage.setItem('observedData', JSON.stringify(observed));
-        AsyncStorage.setItem('predictedData', JSON.stringify(predicted));
-        const today = new Date().toISOString().split('T')[0];
-        AsyncStorage.setItem('lastFetchDate', today);
+      AsyncStorage.setItem('observedData', JSON.stringify(observed));
+      AsyncStorage.setItem('predictedData', JSON.stringify(predicted));
+      const today = new Date().toISOString().split('T')[0];
+      AsyncStorage.setItem('lastFetchDate', today);
     } catch (error) {
+      const storedObserved = await AsyncStorage.getItem('observedData');
+      const storedPredicted = await AsyncStorage.getItem('predictedData');
+      if (storedObserved) setObservedData(JSON.parse(storedObserved));
+      if (storedPredicted) setPredictedData(JSON.parse(storedPredicted));
+    }
+  };
+
+  useEffect(() => {
+    const checkAndFetchData = async () => {
+      const lastFetchDate = await AsyncStorage.getItem('lastFetchDate');
+      const today = new Date().toISOString().split('T')[0];
+
+      if (lastFetchDate !== today) {
+        await fetchData();
+      } else {
         const storedObserved = await AsyncStorage.getItem('observedData');
         const storedPredicted = await AsyncStorage.getItem('predictedData');
-        if (storedObserved) setObservedData(JSON.parse(storedObserved));
-        if (storedPredicted) setPredictedData(JSON.parse(storedPredicted));
-    }
-};
+        let observedData = [];
+        let predictedData = [];
 
-useEffect(() => {
-    const checkAndFetchData = async () => {
-        const lastFetchDate = await AsyncStorage.getItem('lastFetchDate');
-        const today = new Date().toISOString().split('T')[0];
-
-        if (lastFetchDate !== today) {
-            await fetchData();
-        } else {
-            const storedObserved = await AsyncStorage.getItem('observedData');
-            const storedPredicted = await AsyncStorage.getItem('predictedData');
-            if (storedObserved) setObservedData(JSON.parse(storedObserved));
-            if (storedPredicted) setPredictedData(JSON.parse(storedPredicted));
+        if (storedObserved) {
+          observedData = JSON.parse(storedObserved);
+          setObservedData(observedData);
         }
+        if (storedPredicted) {
+          predictedData = JSON.parse(storedPredicted);
+          setPredictedData(predictedData);
+        }
+        setTotalCount(observedData.length + predictedData.length);
+      }
     };
 
     checkAndFetchData();
-}, []);
+  }, []);
 
   const ObservedTab = () => (
     <ScrollView>
@@ -276,12 +286,12 @@ useEffect(() => {
         const response = await fetch(url);
         const text = await response.text();
         let data = JSON.parse(text);
-  
+
         // Post-process data if needed (e.g., setting default site)
         if (postProcess) {
           data = postProcess(data);
         }
-  
+
         setDataFunction(data);
         AsyncStorage.setItem(storageKey, JSON.stringify(data));
         const today = new Date().toISOString().split('T')[0];
@@ -294,21 +304,44 @@ useEffect(() => {
         }
       }
     };
-  
+
     const checkAndFetchData = async (url, storageKey, setDataFunction, postProcess) => {
       const lastFetchDate = await AsyncStorage.getItem(`lastFetchDate-${storageKey}`);
       const today = new Date().toISOString().split('T')[0];
-  
+
+      let data;
       if (lastFetchDate !== today) {
-        await fetchData(url, storageKey, setDataFunction, postProcess);
+        try {
+          const response = await fetch(url);
+          const text = await response.text();
+          data = JSON.parse(text);
+          await AsyncStorage.setItem(storageKey, JSON.stringify(data));
+          await AsyncStorage.setItem(`lastFetchDate-${storageKey}`, today);
+        } catch (error) {
+          console.error(`Error fetching data from ${url}:`, error);
+          // Attempt to load from AsyncStorage if fetch fails
+          const storedData = await AsyncStorage.getItem(storageKey);
+          if (storedData) {
+            data = JSON.parse(storedData);
+          }
+        }
       } else {
         const storedData = await AsyncStorage.getItem(storageKey);
         if (storedData) {
-          setDataFunction(JSON.parse(storedData));
+          data = JSON.parse(storedData);
         }
       }
+
+      // Apply post-process (if available) and update the state
+      if (data) {
+        if (postProcess) {
+          data = postProcess(data);
+        }
+        setDataFunction(data);
+      }
     };
-  
+
+
     // Function to select the first site as default
     const processSiteOptions = (siteArray) => {
       if (Array.isArray(siteArray) && siteArray.length > 0) {
@@ -321,13 +354,13 @@ useEffect(() => {
         return [];
       }
     };
-  
+
     checkAndFetchData('https://enterococcus.today/waf/TX/others/stations.txt', 'siteOptions', setSiteOptions, processSiteOptions);
     checkAndFetchData('https://enterococcus.today/waf/TX/others/beach_lat_lon.txt', 'coordsDict', setCoordsDict);
     checkAndFetchData('https://enterococcus.today/waf/TX/others/contact_details.json', 'contactDetails', setContactDetails);
-  
+
   }, []);
-  
+
   useEffect(() => {
     if (selectedSite) {
       const imageSrc = `https://enterococcus.today/waf/TX/others/beach_images/${selectedSite}.jpg`;
@@ -340,7 +373,7 @@ useEffect(() => {
       <TouchableOpacity onPress={showDataAlert} style={styles.alertButton}>
         <Text style={styles.alertText}>({totalCount}) Alert!</Text>
       </TouchableOpacity>
-      
+
       <Modal
         animationType="slide"
         transparent={false}
@@ -356,7 +389,7 @@ useEffect(() => {
 
           />
           <TouchableOpacity
-            style={styles.closeButton}processSiteOptions 
+            style={styles.closeButton} processSiteOptions
             onPress={() => setIsModalVisible(false)}
           >
             <Text style={{ color: 'white' }}>OK</Text>
@@ -366,7 +399,7 @@ useEffect(() => {
 
 
 
-    <Modal
+      <Modal
         visible={isPickerModalVisible}
         onRequestClose={() => setPickerModalVisible(false)}
         transparent={true}
@@ -384,23 +417,30 @@ useEffect(() => {
       </Modal>
 
       <View style={styles.pickerAndDotsContainer}>
-      <View style={styles.pickerContainer}>
-        <TouchableOpacity
-          onPress={() => setPickerModalVisible(true)}
-          style={styles.pickerButton}
+        <View style={styles.pickerContainer}>
+          <TouchableOpacity
+            onPress={() => setPickerModalVisible(true)}
+            style={styles.pickerButton}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>
+              <Text style={{ color: 'blue', padding: 5 }}>
+                {selectedSite ? siteOptions.find(item => item.match(/\(([^)]+)\)/)?.[1] === selectedSite) : 'Select Site'}
+              </Text>
+              {/* <FontAwesome name="caret-down" size={20} color="black"  style={{ right:5 }}/> */}
+            </View>
+          </TouchableOpacity>
+        </View>
+        <ImageBackground
+          source={require('../assets/images/map_images/map_main.jpg')} 
+          style={styles.dotsButtonBackground} 
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',}}>
-            <Text style={{ color: 'blue' , padding: 5}}>
-              {selectedSite ? siteOptions.find(item => item.match(/\(([^)]+)\)/)?.[1] === selectedSite) : 'Select Site'}
-            </Text>
-            {/* <FontAwesome name="caret-down" size={20} color="black"  style={{ right:5 }}/> */}
-          </View>
+        <TouchableOpacity onPress={() => setImageModalVisible(true)} style={styles.dotsButton}>
+          <Text style={styles.dotsButtonText}>⋮</Text>
         </TouchableOpacity>
+
+        </ImageBackground>
+
       </View>
-      <TouchableOpacity onPress={() => setImageModalVisible(true)} style={styles.dotsButton}>
-        <Text>⋮</Text>
-      </TouchableOpacity>
-    </View>
 
       <Text style={{ marginTop: 30, fontSize: 14, fontWeight: 'bold' }}>Enterococcus Counts</Text>
       {selectedSite && <GraphView siteId={selectedSite} />}

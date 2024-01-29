@@ -50,51 +50,40 @@ export const styles = StyleSheet.create({
       // fontFamily: 'Helvetica',
     },
 
-    checkboxContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-start', 
-      marginVertical: 1
-    },
-    checkboxBase: {
-      width: 10,  // Size adjustments as before
-      height: 10,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: 'black',
-      borderRadius: 3,
-      marginRight: 5,
-    },
-    checkboxChecked: {
-      backgroundColor: 'blue',
-    },
-    checkboxCheckmark: {
-      color: 'white',
-      fontSize: 8, // Reduced font size
+    dropdownButton: {
+      padding: 10, 
     },
     dropdownOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      justifyContent: 'flex-start',
+      alignItems: 'flex-end',
     },
     dropdownMenu: {
+      position: 'absolute',
+      right: 30, // Position near to three dots
+      top: 220,   // Adjust this as needed
+      width: 130, // Width of the dropdown
       backgroundColor: 'white',
-      padding: 20,
-      borderRadius: 10,
-      elevation: 5, // Shadow for Android
-      shadowColor: '#000', // Shadow for iOS
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
+      borderRadius: 5,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.5,
+      shadowRadius: 2,
+      elevation: 5,
     },
     dropdownItem: {
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      padding: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ddd', // Add a separator line between items
+    },
+    dropdownItemSelected: {
+      backgroundColor: 'lightgray', // Highlight selected items
+    },
+    dropdownItemText: {
+      color: 'black', 
+      fontSize: 10,// Default text color
     },
   });
 
