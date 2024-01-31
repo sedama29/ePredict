@@ -214,16 +214,14 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    // fontFamily: 'Helvetica',
   },
   linkText: {
     color: 'blue',
     textDecorationLine: 'underline',
-    // fontFamily: 'Helvetica',
   },
   dotsButtonBackground: {
-    width: 10,
-    height: 30,
+    width: 15,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
@@ -234,7 +232,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+   
   dotsButtonText: {
     fontSize: 20, 
     color: 'black', 

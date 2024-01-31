@@ -14,9 +14,10 @@ const chartPadding = { top: 10, bottom: 50, left: 50, right: 50 };
 const GraphView = ({ siteId }) => {
   const [data, setData] = useState({});
   const [visiblePlots, setVisiblePlots] = useState({});
-  const [showLegend, setShowLegend] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [maxYValue, setMaxYValue] = useState(0); 
+
 
   const screenWidth = 400;
   const screenHeight = 300;
@@ -102,6 +103,13 @@ const GraphView = ({ siteId }) => {
           return acc;
         }, {});
 
+        const maxValue = d3.max(filteredData, d => {
+          return d3.max(Object.keys(d).filter(key => key !== 'date'), key => d[key]);
+        });
+    
+        setMaxYValue(maxValue);
+    
+
         setData(transformedData);
 
         const initialVisibility = {};
@@ -177,7 +185,7 @@ const GraphView = ({ siteId }) => {
             <TouchableOpacity
                   style={[
                     styles.dropdownItem,
-                    (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']) ? dropdownStyles.dropdownItemSelected : null,
+                    (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && visiblePlots['Probality_Space']) ? styles.dropdownItemSelected : null,
                   ]}
                   onPress={() => handlePlotToggle(null, true)}
                 >
@@ -217,7 +225,7 @@ const GraphView = ({ siteId }) => {
               onZoom={handleZoom}
             />
           }
-          domain={{ x: [startDate, endDate] }}
+          domain={{ x: [startDate, endDate], y: [0, maxYValue+10] }} // Set the y-axis domain dynamically
         >
 
           <VictoryAxis
