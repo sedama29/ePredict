@@ -1,5 +1,9 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
+const { height } = Dimensions.get('window');
+const dynamicMargin = height * 0.2;
+
+print("height",height)
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -7,55 +11,39 @@ export const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
   logo: {
-    width: 250,
-    height: 150,
-    marginBottom: 50,
-    marginTop: 150
+    marginBottom: dynamicMargin*0.4,
+    marginTop: dynamicMargin
   },
   logo2: {
     width: 170,
-    height: 50, // Adjust this based on your requirement
+    height: 50,
     resizeMode: 'contain',
   },
   description: {
     fontSize: 10,
-    marginBottom: 50,
+    marginBottom: dynamicMargin*0.4,
     marginLeft: 10,
     marginRight: 10,
     color: 'white',
-    // fontFamily: 'Helvetica',
   },
   googleButton: {
     backgroundColor: 'blue',
     padding: 10,
     borderRadius: 5,
-    marginBottom: 50,
+    marginBottom: dynamicMargin*0.4,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    // fontFamily: 'Helvetica',
   },
   agreementText: {
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: dynamicMargin*0.4,
     marginHorizontal: 30,
     color: 'white',
   },
   hyperlink: {
     color: 'blue',
-  },
-  pickerAndDotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  
-  dotsButton: {
-    width: 30,   // Specify the width
-    height: 30,  // Specify the height
-    justifyContent: 'center',
-    alignItems: 'center'
   },
 });
 

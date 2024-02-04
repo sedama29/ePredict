@@ -12,7 +12,6 @@ import MapImage2 from '../assets/images/map_images/GAL.jpg';
 import MapImage3 from '../assets/images/map_images/BRA.jpg';
 import MapImage4 from '../assets/images/map_images/NUE.jpg';
 import MapImage5 from '../assets/images/map_images/CAM.jpg';
-
 const initialLayout = { width: Dimensions.get('window').width };
 
 
@@ -53,7 +52,6 @@ const Home = () => {
 
   const handleMapPress = (evt) => {
     const { locationX, locationY } = evt.nativeEvent;
-
     for (const touchArea of touchAreas) {
       if (
         locationX >= touchArea.x[0] && locationX <= touchArea.x[1] &&
@@ -341,7 +339,6 @@ const Home = () => {
       }
     };
 
-
     // Function to select the first site as default
     const processSiteOptions = (siteArray) => {
       if (Array.isArray(siteArray) && siteArray.length > 0) {
@@ -430,15 +427,23 @@ const Home = () => {
             </View>
           </TouchableOpacity>
         </View>
-        <ImageBackground
-          source={require('../assets/images/map_images/map_main.jpg')} 
+        <TouchableOpacity onPress={() => setImageModalVisible(true)} style={styles.dotsButtonBackground}>
+          <ImageBackground
+            source={require('../assets/images/map_images/bg.jpg')}
+            style={{ width: '100%', height: '100%' }} 
+          >
+          </ImageBackground>
+        </TouchableOpacity>
+
+        {/* <ImageBackground
+          source={require('../assets/images/map_images/bg.jpg')} 
           style={styles.dotsButtonBackground} 
         >
         <TouchableOpacity onPress={() => setImageModalVisible(true)} style={styles.dotsButton}>
           <Text style={styles.dotsButtonText}>⋮</Text>
         </TouchableOpacity>
 
-        </ImageBackground>
+        </ImageBackground> */}
 
       </View>
 

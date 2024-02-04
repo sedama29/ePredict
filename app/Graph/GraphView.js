@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback} from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, ImageBackground} from 'react-native';
 import { VictoryChart, VictoryTheme, VictoryAxis, VictoryLine, VictoryArea, VictoryContainer, VictoryZoomContainer } from 'victory-native';
 import axios from 'axios';
 import * as d3 from 'd3';
 import { styles } from '../style/style_graph_view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CustomZoomBackgroundContainer from './CustomZoomBackgroundContainer';
-
+import CustomZoomBackgroundContainer from './CustomZoomBackgroundContainer'; 
 
 const chartPadding = { top: 10, bottom: 50, left: 50, right: 50 };
-
 
 const GraphView = ({ siteId }) => {
   const [data, setData] = useState({});
@@ -145,9 +143,6 @@ const GraphView = ({ siteId }) => {
 
   const formatDate = d3.timeFormat("%d %b");
 
-
-
-
   // Generate areaPlotData conditionally based on the visibility of the grouped plots
   let areaPlotData = [];
   if (visiblePlots['Probality_Space_high'] && visiblePlots['Probality_Space_low'] && data['Probality_Space_high'] && data['Probality_Space_low']) {
@@ -164,12 +159,11 @@ const GraphView = ({ siteId }) => {
   }
 
 
-
   return (
     <ScrollView horizontal style={styles.container} contentContainerStyle={styles.contentContainer}>
        <View style={styles.legendToggleButton}>
         <TouchableOpacity onPress={toggleDropdown}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold' }}>⋮</Text>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', backgroundColor: 'lightgray',padding: 10,  }}>⋮</Text>
         </TouchableOpacity>
 
         {dropdownVisible && (
@@ -277,6 +271,5 @@ const GraphView = ({ siteId }) => {
     </ScrollView>
   );
 };
-
 
 export default GraphView;

@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { signInWithGoogle } from './Login'; // Ensure path is correct
+import { signInWithGoogle } from './Login'; 
 import { useColorScheme, Image, View, Text, TouchableOpacity, Modal} from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { styles } from './style/style_index';
 import { useNavigation } from '@react-navigation/native';
-
-
 
 function LoginPage(){
   const isDarkMode = useColorScheme() === 'dark';
@@ -17,16 +15,12 @@ function LoginPage(){
 
   const handleSignIn = async () => {
     try {
-      // Call signInWithGoogle and wait for it to complete
       await signInWithGoogle();
-      navigation.navigate('DrawerNavigator'); // Navigate after successful sign-in
+      navigation.navigate('DrawerNavigator');
     } catch (error) {
       console.error('Sign-in failed:', error);
-      // Optionally, handle the error (e.g., show an error message)
     }
   };
-  
-
 
   return (
     <View style={styles.container}>
