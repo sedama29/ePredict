@@ -13,6 +13,7 @@ import MapImage3 from '../assets/images/map_images/BRA.jpg';
 import MapImage4 from '../assets/images/map_images/NUE.jpg';
 import MapImage5 from '../assets/images/map_images/CAM.jpg';
 const initialLayout = { width: Dimensions.get('window').width };
+import RNPickerSelect from 'react-native-picker-select';
 
 
 const Home = () => {
@@ -29,6 +30,8 @@ const Home = () => {
   const [isImageModalVisible, setImageModalVisible] = useState(false);
   const [isCamModalVisible, setCamModalVisible] = useState(false);
   const [isPickerModalVisible, setPickerModalVisible] = useState(false);
+  const [buttonLayout, setButtonLayout] = useState(null);
+
 
   const renderPickerItem = ({ item }) => (
     <TouchableOpacity
@@ -395,14 +398,21 @@ const Home = () => {
       </Modal>
 
 
-
       <Modal
         visible={isPickerModalVisible}
         onRequestClose={() => setPickerModalVisible(false)}
         transparent={true}
+        animationType="fade" // Use "fade" for a smoother appearance/disappearance
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.dropdownContainer}>
+      <View style={[styles.modalContainer, {
+          top: buttonLayout ? buttonLayout.y + buttonLayout.height : 0, // Position below the button
+        }]}>
+        <TouchableOpacity
+          style={styles.modalContainer}
+          activeOpacity={1} // Maintain the background opacity
+          onPressOut={() => setPickerModalVisible(false)} // Dismiss modal on pressing outside
+        >
+          <View style={styles.dropdownContainer} onStartShouldSetResponder={() => true}>
             <FlatList
               data={siteOptions}
               renderItem={renderPickerItem}
@@ -410,13 +420,19 @@ const Home = () => {
               style={styles.dropdownList}
             />
           </View>
+        </TouchableOpacity>
         </View>
       </Modal>
+
 
       <View style={styles.pickerAndDotsContainer}>
         <View style={styles.pickerContainer}>
           <TouchableOpacity
             onPress={() => setPickerModalVisible(true)}
+            onLayout={(event) => {
+              const layout = event.nativeEvent.layout;
+              setButtonLayout(layout);
+            }}
             style={styles.pickerButton}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', }}>

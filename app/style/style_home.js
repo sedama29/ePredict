@@ -19,22 +19,22 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   
-  dropdownContainer: {
-    marginTop: 160, 
-    marginLeft: 10, 
-    marginRight: 10, 
-    padding: 5,
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    elevation: 3,
-    overflow: 'hidden',
-    borderColor: 'black', // Set the border color to black
-    borderWidth: 1, // Add a border width
-  },
+  // dropdownContainer: {
+  //   marginTop: 160, 
+  //   marginLeft: 10, 
+  //   marginRight: 10, 
+  //   padding: 5,
+  //   position: 'absolute',
+  //   top: '100%',
+  //   left: 0,
+  //   right: 0,
+  //   backgroundColor: 'white',
+  //   borderRadius: 5,
+  //   elevation: 3,
+  //   overflow: 'hidden',
+  //   borderColor: 'black', // Set the border color to black
+  //   borderWidth: 1, // Add a border width
+  // },
   picker: {
     width: '100%',
     color: 'blue',
@@ -237,5 +237,24 @@ export const styles = StyleSheet.create({
     fontSize: 20, 
     color: 'black', 
     fontWeight: 'bold', 
-  }
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'left', 
+    alignItems: 'left',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: Adds a semi-transparent backdrop
+  },
+  dropdownContainer: {
+    width: '80%', 
+    maxHeight: '60%', 
+    backgroundColor: 'white', 
+    borderRadius: 20,
+    padding: 20, 
+    elevation: 20, 
+    shadowOpacity: 0.25, 
+    // shadowRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { height: 2, width: 2 },
+  },
+  
 });
